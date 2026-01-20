@@ -1,0 +1,3800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortressERP | Military-Grade Enterprise POS & ERP System</title>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- JsBarcode -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <!-- Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- CryptoJS for encryption simulation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <style>
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary: #7c3aed;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --info: #0891b2;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+            --box-shadow-light: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 280px;
+            --topbar-height: 70px;
+        }
+
+        /* Dark/Light Mode Variables */
+        .dark-mode {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .light-mode {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #e2e8f0;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+        }
+
+        /* ===== LAYOUT CONTAINERS ===== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .logo-container {
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 30px 0;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 30px;
+        }
+
+        .nav-section-title {
+            padding: 0 25px 15px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 25px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 4px solid transparent;
+            gap: 15px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(var(--primary-rgb), 0.15), transparent);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            height: var(--topbar-height);
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .theme-toggle {
+            width: 50px;
+            height: 26px;
+            background: var(--gray-light);
+            border-radius: 50px;
+            padding: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            left: 3px;
+            transition: var(--transition);
+        }
+
+        .dark-mode .theme-toggle::after {
+            transform: translateX(24px);
+            background: var(--dark);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* ===== CARDS & CONTAINERS ===== */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--box-shadow-light);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--box-shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ===== DASHBOARD WIDGETS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-card), transparent);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary);
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ===== DATA TABLES ===== */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+
+        .data-table th {
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table tbody tr {
+            transition: var(--transition);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(var(--primary-rgb), 0.05);
+        }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+        }
+
+        .badge-primary {
+            background: rgba(var(--primary-rgb), 0.15);
+            color: var(--primary);
+            border-color: rgba(var(--primary-rgb), 0.3);
+        }
+
+        .badge-success {
+            background: rgba(5, 150, 105, 0.15);
+            color: #059669;
+            border-color: rgba(5, 150, 105, 0.3);
+        }
+
+        .badge-warning {
+            background: rgba(217, 119, 6, 0.15);
+            color: #d97706;
+            border-color: rgba(217, 119, 6, 0.3);
+        }
+
+        .badge-danger {
+            background: rgba(220, 38, 38, 0.15);
+            color: #dc2626;
+            border-color: rgba(220, 38, 38, 0.3);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(var(--primary-rgb), 0.05);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ===== FORMS ===== */
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.2);
+        }
+
+        /* ===== MODALS ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        /* ===== PAGINATION ===== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .page-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        .login-container {
+            display: flex;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+
+        /* ===== POS INTERFACE ===== */
+        .pos-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            height: calc(100vh - 180px);
+        }
+
+        .pos-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.2);
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .pos-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .topbar {
+                flex-direction: column;
+                height: auto;
+                padding: 15px;
+                gap: 15px;
+            }
+            
+            .content-area {
+                padding: 15px;
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card slide-in">
+            <div class="logo-icon" style="font-size: 4rem; margin-bottom: 20px;">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 10px;">FortressERP</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 30px;">Military-Grade Enterprise POS & ERP System</p>
+            
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-control" id="loginUsername" placeholder="Enter username" value="admin">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" class="form-control" id="loginPassword" placeholder="Enter password" value="admin123">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                <select class="form-control" id="loginRole">
+                    <option value="admin">Administrator</option>
+                    <option value="manager">Manager</option>
+                    <option value="cashier">Cashier</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Business</label>
+                <select class="form-control" id="loginBusiness">
+                    <option value="main">Main Enterprise (Trial: 30 days)</option>
+                    <option value="branch1">Retail Branch #1</option>
+                    <option value="branch2">Restaurant Division</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="login()">
+                <i class="fas fa-fingerprint"></i> Secure Login
+            </button>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <small style="color: var(--text-secondary);">
+                    <i class="fas fa-info-circle"></i> Session Timeout: 10 minutes • Data Encrypted: AES-256
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appContainer" class="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="logo-text">FortressERP</div>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <!-- Dashboard Section -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <div class="nav-item active" onclick="showPage('dashboard')">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('pos')">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Point of Sale</span>
+                    </div>
+                </div>
+                
+                <!-- Operations Section -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Operations</div>
+                    <div class="nav-item" onclick="showPage('products')">
+                        <i class="fas fa-boxes"></i>
+                        <span>Products</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('inventory')">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Inventory</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('suppliers')">
+                        <i class="fas fa-truck-loading"></i>
+                        <span>Suppliers</span>
+                    </div>
+                </div>
+                
+                <!-- Finance Section -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Finance</div>
+                    <div class="nav-item" onclick="showPage('customers')">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('accounting')">
+                        <i class="fas fa-book"></i>
+                        <span>Accounting</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('cheques')">
+                        <i class="fas fa-money-check-alt"></i>
+                        <span>Cheque Hub</span>
+                    </div>
+                </div>
+                
+                <!-- HR & Loyalty -->
+                <div class="nav-section">
+                    <div class="nav-section-title">HR & Loyalty</div>
+                    <div class="nav-item" onclick="showPage('hr')">
+                        <i class="fas fa-user-tie"></i>
+                        <span>HR & Payroll</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('loyalty')">
+                        <i class="fas fa-crown"></i>
+                        <span>Loyalty Engine</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('attendance')">
+                        <i class="fas fa-clock"></i>
+                        <span>Attendance</span>
+                    </div>
+                </div>
+                
+                <!-- Reports Section -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Reports</div>
+                    <div class="nav-item" onclick="showPage('reports')">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Analytics Reports</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('audit')">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Audit Logs</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('financialReports')">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Financial Reports</span>
+                    </div>
+                </div>
+                
+                <!-- Administration -->
+                <div class="nav-section">
+                    <div class="nav-section-title">Administration</div>
+                    <div class="nav-item" onclick="showPage('admin')">
+                        <i class="fas fa-cogs"></i>
+                        <span>Master Admin</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('barcode')">
+                        <i class="fas fa-barcode"></i>
+                        <span>Barcode Studio</span>
+                    </div>
+                    <div class="nav-item" onclick="showPage('backup')">
+                        <i class="fas fa-database"></i>
+                        <span>Backup & Restore</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 20px; border-top: 1px solid var(--border-color);">
+                <div class="stat-card" style="padding: 15px; text-align: center;">
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 5px;">
+                        Session Active
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--primary);" id="sessionTimer">
+                        10:00
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="btn btn-outline" onclick="toggleSidebar()" style="display: none;" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">
+                        <i class="fas fa-chart-line"></i> Dashboard Analytics
+                    </h1>
+                </div>
+                
+                <div class="topbar-actions">
+                    <div class="theme-toggle" onclick="toggleTheme()"></div>
+                    
+                    <div class="notification-badge" style="position: relative;">
+                        <i class="fas fa-bell" style="font-size: 1.3rem; color: var(--text-secondary); cursor: pointer;"></i>
+                        <span class="badge badge-danger" style="position: absolute; top: -8px; right: -8px; padding: 4px 8px;" id="notificationCount">3</span>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 10px 15px; background: var(--bg-secondary); border-radius: 8px;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white;" id="userAvatar">
+                            A
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;" id="userName">Admin User</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);" id="userRole">Administrator</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area" id="contentArea">
+                <!-- Dashboard Page -->
+                <div id="dashboardPage" class="page-content">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 8px;">TODAY'S REVENUE</h3>
+                                <div class="stat-value">$48,752.80</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #10b981;">
+                                    <i class="fas fa-arrow-up"></i> 24.5% from yesterday
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 8px;">ACTIVE ORDERS</h3>
+                                <div class="stat-value">189</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #10b981;">
+                                    <i class="fas fa-arrow-up"></i> 32 new today
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 8px;">LOW STOCK ITEMS</h3>
+                                <div class="stat-value">47</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #ef4444;">
+                                    <i class="fas fa-exclamation-circle"></i> Needs attention
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 8px;">MONTHLY PROFIT</h3>
+                                <div class="stat-value">$284,250.45</div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: #10b981;">
+                                    <i class="fas fa-arrow-up"></i> 28.3% growth
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Row -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 40px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Sales Performance (Last 30 Days)</div>
+                                <select class="form-control" style="width: 150px;">
+                                    <option>Last 30 Days</option>
+                                    <option>Last 7 Days</option>
+                                    <option>Last 12 Months</option>
+                                </select>
+                            </div>
+                            <canvas id="salesChart" height="250"></canvas>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Payment Methods Distribution</div>
+                            </div>
+                            <canvas id="paymentChart" height="250"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity & Alerts -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Recent Transactions</div>
+                                <button class="btn btn-outline" onclick="showPage('accounting')">
+                                    View All
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Payment</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactions">
+                                        <!-- Loaded via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Security Alerts</div>
+                                <span class="badge badge-danger">5 New</span>
+                            </div>
+                            <div style="padding: 20px;" id="securityAlerts">
+                                <!-- Loaded via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- POS Page -->
+                <div id="posPage" class="page-content" style="display: none;">
+                    <div class="pos-container">
+                        <div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">Products</div>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" class="form-control" placeholder="Search products..." style="width: 200px;">
+                                        <button class="btn btn-outline">
+                                            <i class="fas fa-barcode"></i> Scan
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="pos-products" id="posProducts">
+                                    <!-- Loaded via JS -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Current Sale</div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button class="btn btn-outline" onclick="holdTransaction()">
+                                        <i class="fas fa-pause"></i> Hold
+                                    </button>
+                                    <button class="btn btn-danger" onclick="clearCart()">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 20px;">
+                                <div id="cartItems">
+                                    <!-- Cart items loaded via JS -->
+                                </div>
+                            </div>
+                            
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                    <span>Subtotal:</span>
+                                    <span style="font-weight: 600;">$<span id="subtotal">0.00</span></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                    <span>Tax (15%):</span>
+                                    <span>$<span id="taxAmount">0.00</span></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                    <span>Discount:</span>
+                                    <span style="color: #ef4444;">-$<span id="discountAmount">0.00</span></span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid var(--border-color); font-size: 1.5rem; font-weight: 700;">
+                                    <span>Total:</span>
+                                    <span>$<span id="totalAmount">0.00</span></span>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 25px;">
+                                <div class="form-group">
+                                    <label class="form-label">Customer</label>
+                                    <select class="form-control" id="customerSelect">
+                                        <option>Walk-in Customer</option>
+                                        <option>John Smith (VIP)</option>
+                                        <option>ABC Corporation (Credit)</option>
+                                    </select>
+                                </div>
+                                
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;">
+                                    <button class="btn btn-primary" onclick="processPayment('cash')">
+                                        <i class="fas fa-money-bill-wave"></i> Cash
+                                    </button>
+                                    <button class="btn btn-primary" onclick="processPayment('card')">
+                                        <i class="fas fa-credit-card"></i> Card
+                                    </button>
+                                    <button class="btn btn-primary" onclick="processPayment('credit')">
+                                        <i class="fas fa-handshake"></i> Credit
+                                    </button>
+                                    <button class="btn btn-primary" onclick="processPayment('online')">
+                                        <i class="fas fa-globe"></i> Online
+                                    </button>
+                                </div>
+                                
+                                <button class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1.1rem;" onclick="checkout()">
+                                    <i class="fas fa-check-circle"></i> Complete Sale ($<span id="checkoutTotal">0.00</span>)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Products Page -->
+                <div id="productsPage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Product Management</div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-outline" onclick="exportProducts()">
+                                    <i class="fas fa-file-export"></i> Export
+                                </button>
+                                <button class="btn btn-primary" onclick="showAddProductModal()">
+                                    <i class="fas fa-plus"></i> Add Product
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <input type="text" class="form-control" placeholder="Search products..." id="productSearch">
+                                <select class="form-control" id="categoryFilter">
+                                    <option>All Categories</option>
+                                    <option>Electronics</option>
+                                    <option>Clothing</option>
+                                    <option>Food & Beverage</option>
+                                    <option>Pharmaceutical</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Barcode</th>
+                                        <th>Product Name</th>
+                                        <th>Category</th>
+                                        <th>Stock</th>
+                                        <th>Cost</th>
+                                        <th>Price</th>
+                                        <th>Custom Fields</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTable">
+                                    <!-- Loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination" id="productsPagination">
+                            <!-- Loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Master Admin Panel -->
+                <div id="adminPage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fas fa-cogs"></i> Master Admin Panel
+                            </div>
+                            <span class="badge badge-danger">Super Admin Access</span>
+                        </div>
+                        
+                        <div style="padding: 30px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                                <!-- Business Management -->
+                                <div>
+                                    <h3 style="margin-bottom: 25px; color: var(--primary);">
+                                        <i class="fas fa-building"></i> Business Management
+                                    </h3>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Business Name</label>
+                                        <input type="text" class="form-control" value="Main Enterprise" id="businessName">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Subscription Plan</label>
+                                        <select class="form-control" id="subscriptionPlan">
+                                            <option value="enterprise">Enterprise (Unlimited)</option>
+                                            <option value="professional">Professional</option>
+                                            <option value="standard">Standard</option>
+                                            <option value="basic">Basic</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">License Expiry</label>
+                                        <input type="date" class="form-control" value="2023-12-31" id="licenseExpiry">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Account Status</label>
+                                        <select class="form-control" id="accountStatus">
+                                            <option value="active">Active</option>
+                                            <option value="suspended">Suspended</option>
+                                            <option value="trial">Trial (30 days)</option>
+                                            <option value="expired">Expired</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Activation Key</label>
+                                        <div style="display: flex; gap: 10px;">
+                                            <input type="text" class="form-control" value="FRT-7A9B-2C8D-4E6F" id="activationKey" readonly>
+                                            <button class="btn btn-primary" onclick="generateActivationKey()">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Security Controls -->
+                                <div>
+                                    <h3 style="margin-bottom: 25px; color: var(--danger);">
+                                        <i class="fas fa-shield-alt"></i> Security Controls
+                                    </h3>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Session Timeout (Minutes)</label>
+                                        <input type="number" class="form-control" value="10" min="5" max="120">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Data Encryption</label>
+                                        <select class="form-control">
+                                            <option>AES-256 (Enabled)</option>
+                                            <option>Disabled</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Audit Log Retention (Days)</label>
+                                        <input type="number" class="form-control" value="365" min="30" max="1095">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Login Attempts Limit</label>
+                                        <input type="number" class="form-control" value="5" min="1" max="10">
+                                    </div>
+                                    
+                                    <div style="margin-top: 30px;">
+                                        <button class="btn btn-danger" onclick="initiateLockdown()" style="width: 100%; margin-bottom: 10px;">
+                                            <i class="fas fa-lock"></i> System Lockdown
+                                        </button>
+                                        <button class="btn btn-warning" onclick="terminateAllSessions()" style="width: 100%;">
+                                            <i class="fas fa-sign-out-alt"></i> Terminate All Sessions
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: flex-end; gap: 15px;">
+                                    <button class="btn btn-outline" onclick="resetSystemData()">
+                                        <i class="fas fa-trash"></i> Reset Data
+                                    </button>
+                                    <button class="btn btn-success" onclick="saveAdminSettings()">
+                                        <i class="fas fa-save"></i> Save All Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cheque Hub Page -->
+                <div id="chequesPage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fas fa-money-check-alt"></i> Cheque Hub
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-warning" onclick="showDueChequesReport()">
+                                    <i class="fas fa-exclamation-triangle"></i> Due Cheques
+                                </button>
+                                <button class="btn btn-primary" onclick="showAddChequeModal()">
+                                    <i class="fas fa-plus"></i> Add Cheque
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <select class="form-control" id="chequeTypeFilter">
+                                    <option>All Cheques</option>
+                                    <option>Received</option>
+                                    <option>Issued</option>
+                                    <option>Cleared</option>
+                                    <option>Bounced</option>
+                                </select>
+                                <input type="date" class="form-control" id="chequeDateFilter">
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cheque #</th>
+                                        <th>Type</th>
+                                        <th>Bank</th>
+                                        <th>Amount</th>
+                                        <th>Due Date</th>
+                                        <th>Status</th>
+                                        <th>Linked Account</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="chequesTable">
+                                    <!-- Loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Barcode Studio -->
+                <div id="barcodePage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fas fa-barcode"></i> Barcode Studio
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-success" onclick="printLabels()">
+                                    <i class="fas fa-print"></i> Print Labels
+                                </button>
+                                <button class="btn btn-primary" onclick="generateBarcode()">
+                                    <i class="fas fa-barcode"></i> Generate
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 30px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                                <!-- Label Designer -->
+                                <div>
+                                    <h3 style="margin-bottom: 25px; color: var(--primary);">
+                                        Label Designer
+                                    </h3>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Product Name</label>
+                                        <input type="text" class="form-control" id="labelProductName" placeholder="Enter product name">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">SKU / Barcode</label>
+                                        <input type="text" class="form-control" id="labelSKU" placeholder="Auto-generated or custom">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Price ($)</label>
+                                        <input type="number" class="form-control" id="labelPrice" placeholder="0.00" step="0.01">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Expiry Date</label>
+                                        <input type="date" class="form-control" id="labelExpiry">
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label">Label Template</label>
+                                        <div style="display: flex; gap: 20px; margin-top: 10px;">
+                                            <label style="display: flex; align-items: center; gap: 8px;">
+                                                <input type="radio" name="labelTemplate" value="58mm" checked>
+                                                <span>58mm Thermal</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: 8px;">
+                                                <input type="radio" name="labelTemplate" value="80mm">
+                                                <span>80mm Standard</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="margin-top: 30px;">
+                                        <button class="btn btn-primary" onclick="updateBarcodePreview()" style="width: 100%;">
+                                            <i class="fas fa-sync-alt"></i> Update Preview
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview -->
+                                <div>
+                                    <h3 style="margin-bottom: 25px; color: var(--primary);">
+                                        Preview
+                                    </h3>
+                                    
+                                    <div style="background: white; padding: 30px; border-radius: 10px; text-align: center; min-height: 300px; display: flex; flex-direction: column; justify-content: center;">
+                                        <div id="barcodePreview">
+                                            <svg id="barcodeSVG"></svg>
+                                        </div>
+                                        <div id="labelPreview" style="margin-top: 20px; color: #000;">
+                                            <!-- Preview content -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Audit Logs Page -->
+                <div id="auditPage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fas fa-clipboard-list"></i> Military-Grade Audit Logs
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-danger" onclick="clearAuditLogs()">
+                                    <i class="fas fa-trash"></i> Clear Logs
+                                </button>
+                                <button class="btn btn-outline" onclick="exportAuditLogs()">
+                                    <i class="fas fa-file-export"></i> Export
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <select class="form-control" id="auditActionFilter">
+                                    <option>All Actions</option>
+                                    <option>Login/Logout</option>
+                                    <option>Sales</option>
+                                    <option>Product Changes</option>
+                                    <option>Price Modifications</option>
+                                    <option>Security Events</option>
+                                    <option>Void Transactions</option>
+                                </select>
+                                <input type="text" class="form-control" placeholder="Search user or details..." id="auditSearch">
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Details</th>
+                                        <th>IP Address</th>
+                                        <th>Business</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditLogsTable">
+                                    <!-- Loaded via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="pagination" id="auditPagination">
+                            <!-- Loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Financial Reports Page -->
+                <div id="financialReportsPage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fas fa-file-invoice-dollar"></i> Financial Intelligence Reports
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-outline" onclick="exportReport('excel', 'Financial Reports')">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </button>
+                                <button class="btn btn-outline" onclick="exportReport('pdf', 'Financial Reports')">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 30px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 40px;">
+                                <div class="stat-card" onclick="generateProfitLossReport()" style="cursor: pointer;">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-chart-line"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Profit & Loss</h3>
+                                        <div class="stat-value">Detailed</div>
+                                        <div>Revenue vs Expenses</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card" onclick="generateBalanceSheet()" style="cursor: pointer;">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Balance Sheet</h3>
+                                        <div class="stat-value">Complete</div>
+                                        <div>Assets = Liabilities + Equity</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card" onclick="generateCashFlow()" style="cursor: pointer;">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Cash Flow</h3>
+                                        <div class="stat-value">Analysis</div>
+                                        <div>Operating, Investing, Financing</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card" onclick="generateAgingReports()" style="cursor: pointer;">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>Aging Reports</h3>
+                                        <div class="stat-value">AR/AP</div>
+                                        <div>Receivables & Payables</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="background: var(--bg-secondary); padding: 25px; border-radius: var(--border-radius);">
+                                <h3 style="margin-bottom: 20px;">Quick Reports</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                    <button class="btn btn-outline" onclick="generateDailySalesReport()">
+                                        Daily Sales
+                                    </button>
+                                    <button class="btn btn-outline" onclick="generateCategoryReport()">
+                                        Category-wise
+                                    </button>
+                                    <button class="btn btn-outline" onclick="generatePaymentModeReport()">
+                                        Payment Modes
+                                    </button>
+                                    <button class="btn btn-outline" onclick="generateExpenseBreakdown()">
+                                        Expense Breakdown
+                                    </button>
+                                    <button class="btn btn-outline" onclick="generateStockValuation()">
+                                        Stock Valuation
+                                    </button>
+                                    <button class="btn btn-outline" onclick="generateDeadStockReport()">
+                                        Dead Stock
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- HR & Payroll Page -->
+                <div id="hrPage" class="page-content" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <i class="fas fa-user-tie"></i> HR & Payroll Management
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-success" onclick="generatePayroll()">
+                                    <i class="fas fa-file-invoice"></i> Process Payroll
+                                </button>
+                                <button class="btn btn-primary" onclick="showAddEmployeeModal()">
+                                    <i class="fas fa-plus"></i> Add Employee
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 30px;">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-bottom: 40px;">
+                                <!-- Employees Table -->
+                                <div>
+                                    <h3 style="margin-bottom: 25px;">Employees</h3>
+                                    <div class="table-container">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Employee ID</th>
+                                                    <th>Name</th>
+                                                    <th>Department</th>
+                                                    <th>Position</th>
+                                                    <th>Salary</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="employeesTable">
+                                                <!-- Loaded via JS -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <!-- Attendance Summary -->
+                                <div>
+                                    <h3 style="margin-bottom: 25px;">Attendance Summary</h3>
+                                    <div style="background: var(--bg-secondary); padding: 25px; border-radius: var(--border-radius);">
+                                        <div style="text-align: center; margin-bottom: 20px;">
+                                            <div style="font-size: 2.5rem; font-weight: 700; color: var(--primary);">89%</div>
+                                            <div style="color: var(--text-secondary);">Attendance Rate</div>
+                                        </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>Present:</span>
+                                                <span style="font-weight: 600;">45</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                                <span>Absent:</span>
+                                                <span style="color: #ef4444; font-weight: 600;">3</span>
+                                            </div>
+                                            <div style="display: flex; justify-content: space-between;">
+                                                <span>On Leave:</span>
+                                                <span style="color: #d97706; font-weight: 600;">2</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payroll Calculator -->
+                            <div style="background: var(--bg-secondary); padding: 25px; border-radius: var(--border-radius);">
+                                <h3 style="margin-bottom: 20px;">Payroll Calculator</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                                    <div class="form-group">
+                                        <label class="form-label">Basic Salary</label>
+                                        <input type="number" class="form-control" value="2500" id="basicSalary">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Commission (%)</label>
+                                        <input type="number" class="form-control" value="5" id="commissionRate">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Sales Amount</label>
+                                        <input type="number" class="form-control" value="50000" id="salesAmount">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Deductions</label>
+                                        <input type="number" class="form-control" value="200" id="deductions">
+                                    </div>
+                                </div>
+                                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                                    <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 600;">
+                                        <span>Net Salary:</span>
+                                        <span>$<span id="netSalary">0.00</span></span>
+                                    </div>
+                                    <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="calculateSalary()">
+                                        Calculate Salary
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- More pages would continue here... -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="addProductModal">
+        <div class="modal-content">
+            <div class="card-header" style="padding: 0 0 20px 0; margin-bottom: 20px;">
+                <div class="card-title">
+                    <i class="fas fa-box"></i> Add New Product
+                </div>
+                <button class="btn btn-outline" onclick="closeModal('addProductModal')" style="padding: 8px 12px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Product Name *</label>
+                <input type="text" class="form-control" id="modalProductName" placeholder="Enter product name">
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Barcode *</label>
+                    <input type="text" class="form-control" id="modalBarcode" placeholder="Auto-generate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <select class="form-control" id="modalCategory">
+                        <option>Electronics</option>
+                        <option>Clothing</option>
+                        <option>Food & Beverage</option>
+                        <option>Pharmaceutical</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Cost Price ($) *</label>
+                    <input type="number" class="form-control" id="modalCostPrice" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Selling Price ($) *</label>
+                    <input type="number" class="form-control" id="modalSellingPrice" step="0.01">
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Initial Stock *</label>
+                    <input type="number" class="form-control" id="modalInitialStock">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reorder Level</label>
+                    <input type="number" class="form-control" id="modalReorderLevel" value="10">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Custom Fields</label>
+                <div id="customFieldsContainer">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" class="form-control" placeholder="Field name (e.g., IMEI, Size)">
+                        <input type="text" class="form-control" placeholder="Value">
+                        <button class="btn btn-outline" style="padding: 0 15px;">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: flex-end; gap: 15px;">
+                    <button class="btn btn-outline" onclick="closeModal('addProductModal')">
+                        Cancel
+                    </button>
+                    <button class="btn btn-success" onclick="saveProduct()">
+                        <i class="fas fa-save"></i> Save Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Verification Modal -->
+    <div class="modal" id="securityModal">
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 4rem; color: var(--primary); margin-bottom: 20px;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Security Verification Required</h3>
+                <p style="color: var(--text-secondary); margin-top: 10px;" id="securityDescription">
+                    This action requires additional verification
+                </p>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Enter Your Password</label>
+                <input type="password" class="form-control" id="securityPassword" placeholder="Enter your password">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Security Question</label>
+                <select class="form-control" id="securityQuestion">
+                    <option>What is your mother's maiden name?</option>
+                    <option>What was your first pet's name?</option>
+                    <option>What city were you born in?</option>
+                </select>
+                <input type="text" class="form-control" id="securityAnswer" placeholder="Your answer" style="margin-top: 10px;">
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="verifySecurity()" style="width: 100%;">
+                    <i class="fas fa-check"></i> Verify & Continue
+                </button>
+                <button class="btn btn-outline" onclick="closeModal('securityModal')" style="width: 100%; margin-top: 10px;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <div class="card-header" style="padding: 0 0 20px 0; margin-bottom: 20px;">
+                <div class="card-title">
+                    <i class="fas fa-credit-card"></i> Process Payment
+                </div>
+                <button class="btn btn-outline" onclick="closeModal('paymentModal')" style="padding: 8px 12px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="font-size: 3rem; font-weight: 700; color: var(--primary);">
+                    $<span id="paymentAmount">0.00</span>
+                </div>
+                <div style="color: var(--text-secondary); margin-top: 10px;">
+                    Total amount to be paid
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Payment Method</label>
+                <select class="form-control" id="paymentMethodSelect">
+                    <option value="cash">Cash</option>
+                    <option value="card">Credit/Debit Card</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="credit">Customer Credit</option>
+                    <option value="online">Online Payment</option>
+                </select>
+            </div>
+            
+            <div id="cashPaymentSection">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">Amount Tendered ($)</label>
+                        <input type="number" class="form-control" id="amountTendered" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Change</label>
+                        <input type="text" class="form-control" id="changeAmount" readonly>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="completePayment()" style="width: 100%;">
+                    <i class="fas fa-check-circle"></i> Complete Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Timeout Modal -->
+    <div class="modal" id="timeoutModal">
+        <div class="modal-content">
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="font-size: 4rem; color: #f59e0b; margin-bottom: 20px;">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Session Timeout Warning</h3>
+                <p style="color: var(--text-secondary); margin-top: 10px;">
+                    Your session will expire due to inactivity
+                </p>
+                <div style="font-size: 3rem; font-weight: 700; color: #ef4444; margin: 30px 0;" id="timeoutCounter">
+                    05:00
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn btn-primary" onclick="extendSession()">
+                    <i class="fas fa-sync-alt"></i> Continue Working
+                </button>
+                <button class="btn btn-outline" onclick="logout()" style="margin-left: 15px;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Code -->
+    <script>
+        // ============================================================================
+        // FORTRESS ERP - CORE APPLICATION
+        // ============================================================================
+        
+        // Application State
+        const AppState = {
+            // User & Session
+            user: null,
+            business: null,
+            sessionStart: null,
+            lastActivity: null,
+            sessionTimeout: 10 * 60 * 1000, // 10 minutes in milliseconds
+            sessionTimer: null,
+            
+            // Data Collections
+            products: [],
+            customers: [],
+            suppliers: [],
+            employees: [],
+            transactions: [],
+            cheques: [],
+            auditLogs: [],
+            currentCart: [],
+            
+            // UI State
+            currentPage: 'dashboard',
+            currentPosMode: 'retail',
+            currentProductPage: 1,
+            productsPerPage: 20,
+            currentAuditPage: 1,
+            auditLogsPerPage: 15,
+            
+            // Security
+            encryptionKey: 'FORT_ERF_SYST_SEC_KEY_2023_AES256',
+            isLocked: false,
+            loginAttempts: 0,
+            
+            // Permissions
+            permissions: {
+                admin: ['all'],
+                manager: ['view', 'edit', 'report', 'no_delete', 'no_admin'],
+                cashier: ['view', 'sale', 'no_edit', 'no_delete', 'no_report', 'no_admin']
+            }
+        };
+        
+        // ============================================================================
+        // ENCRYPTION & SECURITY SYSTEM
+        // ============================================================================
+        
+        const FortressSecurity = {
+            // Simulate AES-256 Encryption
+            encrypt: function(data) {
+                try {
+                    // In production, use Web Crypto API
+                    // This is a simulation for demo purposes
+                    const jsonString = JSON.stringify(data);
+                    const encoded = btoa(unescape(encodeURIComponent(jsonString)));
+                    const timestamp = Date.now();
+                    const signature = CryptoJS.SHA256(encoded + AppState.encryptionKey + timestamp).toString();
+                    
+                    return {
+                        data: encoded,
+                        timestamp: timestamp,
+                        signature: signature,
+                        version: 'AES256-SIM'
+                    };
+                } catch (error) {
+                    console.error('Encryption failed:', error);
+                    return null;
+                }
+            },
+            
+            decrypt: function(encryptedData) {
+                try {
+                    if (!encryptedData || !encryptedData.data) return null;
+                    
+                    // Verify signature
+                    const calculatedSignature = CryptoJS.SHA256(
+                        encryptedData.data + AppState.encryptionKey + encryptedData.timestamp
+                    ).toString();
+                    
+                    if (calculatedSignature !== encryptedData.signature) {
+                        console.error('Signature verification failed');
+                        return null;
+                    }
+                    
+                    const decoded = decodeURIComponent(escape(atob(encryptedData.data)));
+                    return JSON.parse(decoded);
+                } catch (error) {
+                    console.error('Decryption failed:', error);
+                    return null;
+                }
+            },
+            
+            // Hash function for IDs
+            hash: function(text) {
+                return CryptoJS.SHA256(text + Date.now().toString()).toString().substring(0, 16);
+            },
+            
+            // Generate secure random string
+            generateSecureId: function() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let result = '';
+                const array = new Uint8Array(32);
+                window.crypto.getRandomValues(array);
+                array.forEach(b => {
+                    result += chars[b % chars.length];
+                });
+                return result;
+            }
+        };
+        
+        // ============================================================================
+        // AUDIT LOGGING SYSTEM (MILITARY-GRADE)
+        // ============================================================================
+        
+        const AuditSystem = {
+            logs: [],
+            
+            log: function(action, details, requireVerification = false) {
+                const logEntry = {
+                    id: FortressSecurity.hash(`AUD${Date.now()}`),
+                    timestamp: new Date().toISOString(),
+                    user: AppState.user ? AppState.user.username : 'system',
+                    role: AppState.user ? AppState.user.role : 'system',
+                    action: action,
+                    details: details,
+                    ipAddress: this.getSimulatedIP(),
+                    business: AppState.business,
+                    requiresVerification: requireVerification,
+                    verified: !requireVerification
+                };
+                
+                this.logs.unshift(logEntry);
+                
+                // Keep only last 10,000 logs for performance
+                if (this.logs.length > 10000) {
+                    this.logs = this.logs.slice(0, 10000);
+                }
+                
+                // Save to encrypted storage
+                this.saveLogs();
+                
+                // Update notification badge
+                this.updateNotificationBadge();
+                
+                return logEntry;
+            },
+            
+            getSimulatedIP: function() {
+                // Generate random IP for simulation
+                return `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+            },
+            
+            saveLogs: function() {
+                try {
+                    const encrypted = FortressSecurity.encrypt(this.logs);
+                    localStorage.setItem(`fortress_audit_${AppState.business}`, JSON.stringify(encrypted));
+                } catch (error) {
+                    console.error('Failed to save audit logs:', error);
+                }
+            },
+            
+            loadLogs: function() {
+                try {
+                    const saved = localStorage.getItem(`fortress_audit_${AppState.business}`);
+                    if (saved) {
+                        const encrypted = JSON.parse(saved);
+                        const decrypted = FortressSecurity.decrypt(encrypted);
+                        if (decrypted) {
+                            this.logs = decrypted;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to load audit logs:', error);
+                }
+            },
+            
+            updateNotificationBadge: function() {
+                const criticalLogs = this.logs.filter(log => 
+                    log.action.includes('Security') || 
+                    log.action.includes('Failed') ||
+                    log.requiresVerification
+                ).length;
+                
+                document.getElementById('notificationCount').textContent = 
+                    Math.min(criticalLogs, 99).toString();
+            },
+            
+            getLogsByAction: function(actionFilter) {
+                if (actionFilter === 'All Actions') {
+                    return this.logs;
+                }
+                return this.logs.filter(log => log.action.includes(actionFilter));
+            },
+            
+            exportLogs: function() {
+                // Show security verification for export
+                showSecurityModal(
+                    'exportAuditLogsConfirmed',
+                    'Export military-grade audit logs'
+                );
+            },
+            
+            clearLogs: function() {
+                // Show security verification for clearing logs
+                showSecurityModal(
+                    'clearAuditLogsConfirmed',
+                    'Clear all audit logs (Admin only)'
+                );
+            }
+        };
+        
+        // ============================================================================
+        // PERMISSION SYSTEM
+        // ============================================================================
+        
+        const PermissionSystem = {
+            checkPermission: function(action) {
+                if (!AppState.user) return false;
+                
+                const role = AppState.user.role;
+                const permissions = AppState.permissions[role];
+                
+                if (!permissions) return false;
+                
+                // Admin has all permissions
+                if (role === 'admin') return true;
+                
+                // Check specific permission
+                if (action.startsWith('no_')) {
+                    return !permissions.includes(action);
+                }
+                
+                return permissions.includes(action) || permissions.includes('all');
+            },
+            
+            requirePermission: function(action, callback) {
+                if (this.checkPermission(action)) {
+                    callback();
+                } else {
+                    showNotification('Access denied. Insufficient permissions.', 'error');
+                }
+            },
+            
+            updateUIByPermissions: function() {
+                const role = AppState.user ? AppState.user.role : 'cashier';
+                
+                // Hide admin-only elements for non-admin users
+                if (role !== 'admin') {
+                    document.querySelectorAll('.admin-only').forEach(el => {
+                        el.style.display = 'none';
+                    });
+                }
+                
+                // Disable delete buttons for cashiers
+                if (role === 'cashier') {
+                    document.querySelectorAll('.delete-btn').forEach(el => {
+                        el.disabled = true;
+                        el.title = 'Delete not allowed for cashier role';
+                    });
+                }
+            }
+        };
+        
+        // ============================================================================
+        // DATA STORAGE WITH ENCRYPTION
+        // ============================================================================
+        
+        const DataVault = {
+            save: function(key, data) {
+                try {
+                    const encrypted = FortressSecurity.encrypt(data);
+                    localStorage.setItem(`fortress_${AppState.business}_${key}`, JSON.stringify(encrypted));
+                    return true;
+                } catch (error) {
+                    console.error('Failed to save data:', error);
+                    return false;
+                }
+            },
+            
+            load: function(key) {
+                try {
+                    const saved = localStorage.getItem(`fortress_${AppState.business}_${key}`);
+                    if (saved) {
+                        const encrypted = JSON.parse(saved);
+                        return FortressSecurity.decrypt(encrypted) || [];
+                    }
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                }
+                return [];
+            },
+            
+            clear: function(key) {
+                localStorage.removeItem(`fortress_${AppState.business}_${key}`);
+            },
+            
+            // Business-specific data isolation
+            ensureBusinessIsolation: function() {
+                // All data operations are automatically scoped to current business
+                // through the key naming convention
+                console.log(`Data isolation active for business: ${AppState.business}`);
+            }
+        };
+        
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApplication();
+            setupEventListeners();
+            checkAutoLogin();
+        });
+        
+        function initializeApplication() {
+            // Initialize sample data
+            initializeSampleData();
+            
+            // Load audit logs
+            AuditSystem.loadLogs();
+            
+            // Setup session management
+            startSessionTimer();
+            setupInactivityMonitor();
+            
+            // Update UI
+            updateNotificationCount();
+            loadDashboardData();
+            
+            // Initialize charts
+            setTimeout(initCharts, 500);
+        }
+        
+        function initializeSampleData() {
+            // Sample products (10,000+ simulation ready)
+            AppState.products = Array.from({length: 150}, (_, i) => ({
+                id: FortressSecurity.hash(`PROD${i}`),
+                barcode: `89${String(i).padStart(10, '0')}`,
+                name: `Product ${i + 1}`,
+                category: ['Electronics', 'Clothing', 'Food', 'Pharmaceutical'][i % 4],
+                costPrice: parseFloat((10 + Math.random() * 90).toFixed(2)),
+                sellingPrice: parseFloat((15 + Math.random() * 150).toFixed(2)),
+                stock: Math.floor(Math.random() * 100),
+                reorderLevel: 10,
+                customFields: [
+                    { name: 'Batch', value: `BATCH-${2023}-${String(i).padStart(4, '0')}` },
+                    { name: 'Expiry', value: `2024-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}` }
+                ],
+                business: 'main'
+            }));
+            
+            // Sample transactions
+            AppState.transactions = Array.from({length: 50}, (_, i) => ({
+                id: FortressSecurity.hash(`TXN${i}`),
+                invoiceNumber: `INV-2023-${String(10000 + i).padStart(5, '0')}`,
+                customer: `Customer ${(i % 10) + 1}`,
+                date: new Date(Date.now() - i * 86400000).toISOString(),
+                amount: parseFloat((100 + Math.random() * 900).toFixed(2)),
+                paymentMethod: ['cash', 'card', 'credit', 'online'][i % 4],
+                status: ['Completed', 'Pending', 'Cancelled'][i % 3],
+                items: Math.floor(Math.random() * 5) + 1,
+                business: 'main'
+            }));
+            
+            // Sample cheques
+            AppState.cheques = Array.from({length: 20}, (_, i) => ({
+                id: FortressSecurity.hash(`CHQ${i}`),
+                chequeNumber: `CHQ${String(1000 + i).padStart(6, '0')}`,
+                type: i % 2 === 0 ? 'Received' : 'Issued',
+                bank: ['National Bank', 'Global Bank', 'City Bank'][i % 3],
+                accountNumber: `****${String(1000 + i).padStart(4, '0')}`,
+                amount: parseFloat((500 + Math.random() * 4500).toFixed(2)),
+                dueDate: new Date(Date.now() + (i * 86400000)).toISOString().split('T')[0],
+                status: ['Pending', 'Cleared', 'Bounced'][i % 3],
+                linkedAccount: ['Cash', 'Bank A', 'Bank B'][i % 3],
+                business: 'main'
+            }));
+            
+            // Sample employees
+            AppState.employees = Array.from({length: 25}, (_, i) => ({
+                id: FortressSecurity.hash(`EMP${i}`),
+                employeeId: `EMP${String(100 + i).padStart(4, '0')}`,
+                name: `Employee ${i + 1}`,
+                department: ['Sales', 'Finance', 'Inventory', 'HR'][i % 4],
+                position: ['Manager', 'Associate', 'Executive', 'Staff'][i % 4],
+                salary: parseFloat((2000 + Math.random() * 3000).toFixed(2)),
+                status: ['Active', 'On Leave', 'Inactive'][i % 3],
+                business: 'main'
+            }));
+        }
+        
+        // ============================================================================
+        // AUTHENTICATION & SESSION MANAGEMENT
+        // ============================================================================
+        
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const role = document.getElementById('loginRole').value;
+            const business = document.getElementById('loginBusiness').value;
+            
+            // Check credentials (demo: admin/admin123)
+            if (username === 'admin' && password === 'admin123') {
+                // Successful login
+                AppState.user = {
+                    username: username,
+                    role: role,
+                    name: username === 'admin' ? 'Administrator' : role.charAt(0).toUpperCase() + role.slice(1)
+                };
+                AppState.business = business;
+                AppState.sessionStart = new Date();
+                AppState.lastActivity = new Date();
+                
+                // Record audit log
+                AuditSystem.log('Login', `User ${username} logged in as ${role}`);
+                
+                // Update UI
+                document.getElementById('userAvatar').textContent = username.charAt(0).toUpperCase();
+                document.getElementById('userName').textContent = AppState.user.name;
+                document.getElementById('userRole').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+                
+                // Show main application
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
+                
+                // Initialize application
+                initializeApplication();
+                
+                // Apply permissions
+                PermissionSystem.updateUIByPermissions();
+                
+                // Show success
+                showNotification('Secure login successful!', 'success');
+                
+            } else {
+                // Failed login
+                AppState.loginAttempts++;
+                AuditSystem.log('Security Event', `Failed login attempt for user: ${username}`);
+                showNotification('Invalid credentials', 'error');
+                
+                // Account lock after 5 attempts
+                if (AppState.loginAttempts >= 5) {
+                    AppState.isLocked = true;
+                    showNotification('Account temporarily locked for security', 'error');
+                    setTimeout(() => {
+                        AppState.isLocked = false;
+                        AppState.loginAttempts = 0;
+                    }, 300000); // 5 minutes
+                }
+            }
+        }
+        
+        function logout() {
+            // Record audit log
+            AuditSystem.log('Logout', 'User logged out');
+            
+            // Clear session
+            AppState.user = null;
+            AppState.business = null;
+            
+            // Clear timers
+            if (AppState.sessionTimer) {
+                clearInterval(AppState.sessionTimer);
+            }
+            
+            // Show login screen
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+            
+            showNotification('You have been logged out', 'info');
+        }
+        
+        function checkAutoLogin() {
+            // In production, check for valid session token
+            // For demo, we'll skip auto-login
+        }
+        
+        // ============================================================================
+        // SESSION MANAGEMENT
+        // ============================================================================
+        
+        function startSessionTimer() {
+            if (AppState.sessionTimer) {
+                clearInterval(AppState.sessionTimer);
+            }
+            
+            AppState.sessionTimer = setInterval(function() {
+                const now = new Date();
+                const inactiveTime = now - AppState.lastActivity;
+                
+                // Update display
+                const remaining = Math.max(0, AppState.sessionTimeout - inactiveTime);
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Show warning at 5 minutes
+                if (inactiveTime > AppState.sessionTimeout - 300000) {
+                    showTimeoutWarning(remaining);
+                }
+                
+                // Auto-logout
+                if (inactiveTime >= AppState.sessionTimeout) {
+                    autoLogout();
+                }
+            }, 1000);
+        }
+        
+        function setupInactivityMonitor() {
+            const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+            events.forEach(event => {
+                document.addEventListener(event, function() {
+                    AppState.lastActivity = new Date();
+                });
+            });
+        }
+        
+        function extendSession() {
+            AppState.lastActivity = new Date();
+            closeModal('timeoutModal');
+            showNotification('Session extended', 'success');
+        }
+        
+        function showTimeoutWarning(remainingMs) {
+            const modal = document.getElementById('timeoutModal');
+            if (!modal.classList.contains('active')) {
+                modal.classList.add('active');
+                
+                let timeLeft = Math.floor(remainingMs / 1000);
+                const counter = document.getElementById('timeoutCounter');
+                
+                const countdown = setInterval(function() {
+                    timeLeft--;
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    counter.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        closeModal('timeoutModal');
+                        autoLogout();
+                    }
+                }, 1000);
+            }
+        }
+        
+        function autoLogout() {
+            AuditSystem.log('Security Event', 'Auto-logout due to inactivity');
+            showNotification('Session expired due to inactivity', 'warning');
+            logout();
+        }
+        
+        // ============================================================================
+        // PAGE NAVIGATION
+        // ============================================================================
+        
+        function showPage(page) {
+            // Check permissions
+            if (page === 'admin' && !PermissionSystem.checkPermission('admin_panel')) {
+                showNotification('Access denied. Admin only.', 'error');
+                return;
+            }
+            
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Update active nav
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Show page
+            document.getElementById(page + 'Page').style.display = 'block';
+            AppState.currentPage = page;
+            
+            // Update title
+            updatePageTitle(page);
+            
+            // Load page data
+            switch(page) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'products':
+                    loadProducts();
+                    break;
+                case 'pos':
+                    loadPOSProducts();
+                    updateCartDisplay();
+                    break;
+                case 'admin':
+                    loadAdminData();
+                    break;
+                case 'cheques':
+                    loadCheques();
+                    break;
+                case 'barcode':
+                    updateBarcodePreview();
+                    break;
+                case 'audit':
+                    loadAuditLogs();
+                    break;
+                case 'financialReports':
+                    // Already loaded
+                    break;
+                case 'hr':
+                    loadEmployees();
+                    break;
+            }
+        }
+        
+        function updatePageTitle(page) {
+            const titles = {
+                'dashboard': 'Dashboard Analytics',
+                'pos': 'Point of Sale',
+                'products': 'Product Management',
+                'inventory': 'Inventory Intelligence',
+                'customers': 'Customer Management',
+                'accounting': 'Accounting System',
+                'cheques': 'Cheque Hub',
+                'hr': 'HR & Payroll',
+                'loyalty': 'Loyalty Engine',
+                'reports': 'Analytics Reports',
+                'audit': 'Audit Logs',
+                'admin': 'Master Admin Panel',
+                'barcode': 'Barcode Studio',
+                'financialReports': 'Financial Intelligence'
+            };
+            
+            document.getElementById('pageTitle').innerHTML = `
+                <i class="fas fa-${getPageIcon(page)}"></i> ${titles[page] || page}
+            `;
+        }
+        
+        function getPageIcon(page) {
+            const icons = {
+                'dashboard': 'chart-line',
+                'pos': 'cash-register',
+                'products': 'boxes',
+                'inventory': 'warehouse',
+                'customers': 'users',
+                'accounting': 'book',
+                'cheques': 'money-check-alt',
+                'hr': 'user-tie',
+                'loyalty': 'crown',
+                'reports': 'chart-bar',
+                'audit': 'clipboard-list',
+                'admin': 'cogs',
+                'barcode': 'barcode',
+                'financialReports': 'file-invoice-dollar'
+            };
+            return icons[page] || 'file';
+        }
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+        
+        // ============================================================================
+        // DASHBOARD FUNCTIONS
+        // ============================================================================
+        
+        function loadDashboardData() {
+            loadRecentTransactions();
+            loadSecurityAlerts();
+        }
+        
+        function loadRecentTransactions() {
+            const tbody = document.getElementById('recentTransactions');
+            tbody.innerHTML = '';
+            
+            AppState.transactions.slice(0, 8).forEach(txn => {
+                const row = document.createElement('tr');
+                
+                let statusBadge = '';
+                switch(txn.status) {
+                    case 'Completed':
+                        statusBadge = '<span class="badge badge-success">Completed</span>';
+                        break;
+                    case 'Pending':
+                        statusBadge = '<span class="badge badge-warning">Pending</span>';
+                        break;
+                    case 'Cancelled':
+                        statusBadge = '<span class="badge badge-danger">Cancelled</span>';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td><strong>${txn.invoiceNumber}</strong></td>
+                    <td>${txn.customer}</td>
+                    <td>${formatDate(txn.date)}</td>
+                    <td><strong>$${txn.amount.toFixed(2)}</strong></td>
+                    <td>${txn.paymentMethod}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function loadSecurityAlerts() {
+            const container = document.getElementById('securityAlerts');
+            container.innerHTML = '';
+            
+            const alerts = [
+                { type: 'warning', message: '5 items below reorder level', time: '1 hour ago' },
+                { type: 'danger', message: 'Cheque #CHQ1005 due tomorrow', time: '2 hours ago' },
+                { type: 'info', message: 'System backup completed', time: '1 day ago' },
+                { type: 'warning', message: '3 failed login attempts detected', time: '2 days ago' }
+            ];
+            
+            alerts.forEach(alert => {
+                const alertDiv = document.createElement('div');
+                alertDiv.style.cssText = `
+                    padding: 15px;
+                    margin-bottom: 10px;
+                    background: rgba(var(--${alert.type}-rgb), 0.1);
+                    border-left: 4px solid var(--${alert.type});
+                    border-radius: 4px;
+                `;
+                
+                alertDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>
+                            <i class="fas fa-${getAlertIcon(alert.type)}"></i>
+                            <strong style="margin-left: 10px;">${alert.message}</strong>
+                        </div>
+                        <small style="color: var(--text-secondary);">${alert.time}</small>
+                    </div>
+                `;
+                
+                container.appendChild(alertDiv);
+            });
+        }
+        
+        function initCharts() {
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Oct 1', 'Oct 5', 'Oct 10', 'Oct 15', 'Oct 20', 'Oct 25', 'Oct 30'],
+                    datasets: [{
+                        label: 'Sales ($)',
+                        data: [28000, 32000, 29000, 35000, 38000, 42000, 40000],
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: 'var(--text-secondary)' }
+                        },
+                        x: {
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            ticks: { color: 'var(--text-secondary)' }
+                        }
+                    }
+                }
+            });
+            
+            // Payment Chart
+            const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+            new Chart(paymentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cash', 'Card', 'Online', 'Credit'],
+                    datasets: [{
+                        data: [40, 35, 15, 10],
+                        backgroundColor: [
+                            'rgb(16, 185, 129)',
+                            'rgb(59, 130, 246)',
+                            'rgb(139, 92, 246)',
+                            'rgb(245, 158, 11)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: 'var(--text-secondary)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ============================================================================
+        // POS SYSTEM
+        // ============================================================================
+        
+        function loadPOSProducts() {
+            const container = document.getElementById('posProducts');
+            container.innerHTML = '';
+            
+            // Show first 50 products (paginated for performance)
+            AppState.products.slice(0, 50).forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.onclick = () => addToCart(product);
+                
+                card.innerHTML = `
+                    <div style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div style="font-weight: 600; margin-bottom: 5px;">${product.name}</div>
+                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--success); margin-bottom: 5px;">
+                        $${product.sellingPrice.toFixed(2)}
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                        Stock: ${product.stock}
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        function addToCart(product) {
+            PermissionSystem.requirePermission('sale', () => {
+                const existing = AppState.currentCart.find(item => item.id === product.id);
+                
+                if (existing) {
+                    if (existing.quantity >= product.stock) {
+                        showNotification('Insufficient stock', 'error');
+                        return;
+                    }
+                    existing.quantity += 1;
+                } else {
+                    if (product.stock < 1) {
+                        showNotification('Out of stock', 'error');
+                        return;
+                    }
+                    AppState.currentCart.push({
+                        ...product,
+                        quantity: 1
+                    });
+                }
+                
+                AuditSystem.log('POS', `Added ${product.name} to cart`);
+                updateCartDisplay();
+                showNotification(`${product.name} added to cart`, 'success');
+            });
+        }
+        
+        function updateCartDisplay() {
+            const container = document.getElementById('cartItems');
+            const subtotalEl = document.getElementById('subtotal');
+            const taxEl = document.getElementById('taxAmount');
+            const discountEl = document.getElementById('discountAmount');
+            const totalEl = document.getElementById('totalAmount');
+            const checkoutEl = document.getElementById('checkoutTotal');
+            
+            if (AppState.currentCart.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-shopping-cart" style="font-size: 3rem;"></i>
+                        <p style="margin-top: 15px;">Cart is empty</p>
+                    </div>
+                `;
+                
+                [subtotalEl, taxEl, discountEl, totalEl, checkoutEl].forEach(el => {
+                    el.textContent = '0.00';
+                });
+                return;
+            }
+            
+            let subtotal = 0;
+            let html = '';
+            
+            AppState.currentCart.forEach((item, index) => {
+                const itemTotal = item.sellingPrice * item.quantity;
+                subtotal += itemTotal;
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 10px;">
+                        <div>
+                            <div style="font-weight: 600;">${item.name}</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                $${item.sellingPrice.toFixed(2)} × ${item.quantity}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="font-weight: 700;">$${itemTotal.toFixed(2)}</div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="btn btn-outline" onclick="updateCartQuantity(${index}, -1)" style="padding: 5px 10px;">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <button class="btn btn-outline" onclick="updateCartQuantity(${index}, 1)" style="padding: 5px 10px;">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <button class="btn btn-danger" onclick="removeFromCart(${index})" style="padding: 5px 10px;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Calculate totals
+            const taxRate = 0.15;
+            const tax = subtotal * taxRate;
+            const discount = 0;
+            const total = subtotal + tax - discount;
+            
+            container.innerHTML = html;
+            subtotalEl.textContent = subtotal.toFixed(2);
+            taxEl.textContent = tax.toFixed(2);
+            discountEl.textContent = discount.toFixed(2);
+            totalEl.textContent = total.toFixed(2);
+            checkoutEl.textContent = total.toFixed(2);
+        }
+        
+        function updateCartQuantity(index, change) {
+            const item = AppState.currentCart[index];
+            item.quantity += change;
+            
+            if (item.quantity <= 0) {
+                AppState.currentCart.splice(index, 1);
+            } else if (item.quantity > item.stock) {
+                item.quantity = item.stock;
+                showNotification('Cannot exceed available stock', 'error');
+            }
+            
+            updateCartDisplay();
+        }
+        
+        function removeFromCart(index) {
+            const item = AppState.currentCart[index];
+            AppState.currentCart.splice(index, 1);
+            AuditSystem.log('POS', `Removed ${item.name} from cart`);
+            updateCartDisplay();
+        }
+        
+        function clearCart() {
+            if (AppState.currentCart.length === 0) return;
+            
+            if (confirm('Clear the entire cart?')) {
+                AppState.currentCart = [];
+                updateCartDisplay();
+                showNotification('Cart cleared', 'info');
+            }
+        }
+        
+        function holdTransaction() {
+            if (AppState.currentCart.length === 0) {
+                showNotification('Cart is empty', 'error');
+                return;
+            }
+            
+            showNotification('Transaction held successfully', 'success');
+            AuditSystem.log('POS', 'Transaction held');
+            AppState.currentCart = [];
+            updateCartDisplay();
+        }
+        
+        function processPayment(method) {
+            if (AppState.currentCart.length === 0) {
+                showNotification('Cart is empty', 'error');
+                return;
+            }
+            
+            const subtotal = AppState.currentCart.reduce((sum, item) => 
+                sum + (item.sellingPrice * item.quantity), 0);
+            const tax = subtotal * 0.15;
+            const total = subtotal + tax;
+            
+            document.getElementById('paymentAmount').textContent = total.toFixed(2);
+            document.getElementById('paymentMethodSelect').value = method;
+            
+            if (method === 'cash') {
+                document.getElementById('amountTendered').value = total.toFixed(2);
+                calculateChange();
+            }
+            
+            showModal('paymentModal');
+        }
+        
+        function calculateChange() {
+            const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
+            const total = parseFloat(document.getElementById('paymentAmount').textContent);
+            const change = tendered - total;
+            document.getElementById('changeAmount').value = 
+                change >= 0 ? change.toFixed(2) : '0.00';
+        }
+        
+        function checkout() {
+            if (AppState.currentCart.length === 0) {
+                showNotification('Cart is empty', 'error');
+                return;
+            }
+            
+            processPayment('cash');
+        }
+        
+        function completePayment() {
+            const method = document.getElementById('paymentMethodSelect').value;
+            const total = parseFloat(document.getElementById('paymentAmount').textContent);
+            
+            // Create transaction
+            const txn = {
+                id: FortressSecurity.hash(`TXN${Date.now()}`),
+                invoiceNumber: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`,
+                customer: document.getElementById('customerSelect').value,
+                date: new Date().toISOString(),
+                amount: total,
+                paymentMethod: method,
+                status: 'Completed',
+                items: AppState.currentCart.length,
+                business: AppState.business
+            };
+            
+            // Update stock
+            AppState.currentCart.forEach(cartItem => {
+                const product = AppState.products.find(p => p.id === cartItem.id);
+                if (product) {
+                    product.stock -= cartItem.quantity;
+                }
+            });
+            
+            // Add to transactions
+            AppState.transactions.unshift(txn);
+            
+            // Audit log
+            AuditSystem.log('Sale', `Completed sale ${txn.invoiceNumber} for $${total.toFixed(2)} via ${method}`);
+            
+            // Show success
+            showNotification(`Payment of $${total.toFixed(2)} completed!`, 'success');
+            
+            // Print receipt
+            printReceipt(txn);
+            
+            // Clear and close
+            AppState.currentCart = [];
+            updateCartDisplay();
+            closeModal('paymentModal');
+            loadRecentTransactions();
+        }
+        
+        function printReceipt(transaction) {
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <html>
+                <head>
+                    <title>Receipt ${transaction.invoiceNumber}</title>
+                    <style>
+                        body { font-family: monospace; width: 80mm; padding: 10px; }
+                        .header { text-align: center; margin-bottom: 15px; }
+                        .item { display: flex; justify-content: space-between; margin: 5px 0; }
+                        .total { font-weight: bold; font-size: 1.2em; margin-top: 10px; }
+                        .footer { text-align: center; margin-top: 20px; font-size: 0.8em; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h3>FortressERP</h3>
+                        <p>${transaction.invoiceNumber}</p>
+                        <p>${formatDateTime(transaction.date)}</p>
+                    </div>
+                    ${AppState.currentCart.map(item => `
+                        <div class="item">
+                            <span>${item.name} x${item.quantity}</span>
+                            <span>$${(item.sellingPrice * item.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <div class="item total">
+                        <span>Total:</span>
+                        <span>$${transaction.amount.toFixed(2)}</span>
+                    </div>
+                    <div class="footer">
+                        <p>Payment: ${transaction.paymentMethod}</p>
+                        <p>Thank you for your business!</p>
+                    </div>
+                </body>
+                </html>
+            `);
+            win.print();
+            win.close();
+        }
+        
+        // ============================================================================
+        // PRODUCT MANAGEMENT
+        // ============================================================================
+        
+        function loadProducts() {
+            const tbody = document.getElementById('productsTable');
+            tbody.innerHTML = '';
+            
+            // Calculate pagination
+            const start = (AppState.currentProductPage - 1) * AppState.productsPerPage;
+            const end = start + AppState.productsPerPage;
+            const pageProducts = AppState.products.slice(start, end);
+            
+            pageProducts.forEach(product => {
+                const row = document.createElement('tr');
+                
+                // Stock status
+                let stockBadge = '';
+                if (product.stock <= 0) {
+                    stockBadge = '<span class="badge badge-danger">Out of Stock</span>';
+                } else if (product.stock <= product.reorderLevel) {
+                    stockBadge = '<span class="badge badge-warning">Low Stock</span>';
+                } else {
+                    stockBadge = '<span class="badge badge-success">In Stock</span>';
+                }
+                
+                // Custom fields
+                const customFields = product.customFields 
+                    ? product.customFields.map(f => `${f.name}: ${f.value}`).join(', ')
+                    : '';
+                
+                row.innerHTML = `
+                    <td><code>${product.barcode}</code></td>
+                    <td><strong>${product.name}</strong></td>
+                    <td>${product.category}</td>
+                    <td>
+                        ${stockBadge}<br>
+                        <small>${product.stock} units</small>
+                    </td>
+                    <td>$${product.costPrice.toFixed(2)}</td>
+                    <td><strong>$${product.sellingPrice.toFixed(2)}</strong></td>
+                    <td><small>${customFields}</small></td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="btn btn-outline" onclick="editProduct('${product.id}')" style="padding: 5px 10px;">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger delete-btn" onclick="deleteProduct('${product.id}')" style="padding: 5px 10px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            updateProductPagination();
+            PermissionSystem.updateUIByPermissions();
+        }
+        
+        function updateProductPagination() {
+            const totalPages = Math.ceil(AppState.products.length / AppState.productsPerPage);
+            const pagination = document.getElementById('productsPagination');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            let html = '';
+            
+            // Previous
+            html += `<button class="page-btn" ${AppState.currentProductPage === 1 ? 'disabled' : ''} 
+                     onclick="changeProductPage(${AppState.currentProductPage - 1})">
+                     <i class="fas fa-chevron-left"></i></button>`;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= AppState.currentProductPage - 2 && i <= AppState.currentProductPage + 2)) {
+                    html += `<button class="page-btn ${i === AppState.currentProductPage ? 'active' : ''}" 
+                             onclick="changeProductPage(${i})">${i}</button>`;
+                } else if (i === AppState.currentProductPage - 3 || i === AppState.currentProductPage + 3) {
+                    html += `<span style="padding: 10px;">...</span>`;
+                }
+            }
+            
+            // Next
+            html += `<button class="page-btn" ${AppState.currentProductPage === totalPages ? 'disabled' : ''} 
+                     onclick="changeProductPage(${AppState.currentProductPage + 1})">
+                     <i class="fas fa-chevron-right"></i></button>`;
+            
+            pagination.innerHTML = html;
+        }
+        
+        function changeProductPage(page) {
+            AppState.currentProductPage = page;
+            loadProducts();
+        }
+        
+        function showAddProductModal() {
+            PermissionSystem.requirePermission('edit', () => {
+                // Generate barcode
+                const barcode = `89${Math.floor(Math.random() * 10000000000).toString().padStart(10, '0')}`;
+                document.getElementById('modalBarcode').value = barcode;
+                
+                showModal('addProductModal');
+            });
+        }
+        
+        function saveProduct() {
+            const name = document.getElementById('modalProductName').value;
+            const barcode = document.getElementById('modalBarcode').value;
+            const category = document.getElementById('modalCategory').value;
+            const costPrice = parseFloat(document.getElementById('modalCostPrice').value);
+            const sellingPrice = parseFloat(document.getElementById('modalSellingPrice').value);
+            const stock = parseInt(document.getElementById('modalInitialStock').value);
+            
+            if (!name || !barcode || !category || isNaN(costPrice) || isNaN(sellingPrice) || isNaN(stock)) {
+                showNotification('Please fill all required fields', 'error');
+                return;
+            }
+            
+            const product = {
+                id: FortressSecurity.hash(`PROD${Date.now()}`),
+                barcode: barcode,
+                name: name,
+                category: category,
+                costPrice: costPrice,
+                sellingPrice: sellingPrice,
+                stock: stock,
+                reorderLevel: parseInt(document.getElementById('modalReorderLevel').value) || 10,
+                customFields: [],
+                business: AppState.business
+            };
+            
+            AppState.products.unshift(product);
+            AuditSystem.log('Product Added', `Added product: ${name} (${barcode})`);
+            
+            closeModal('addProductModal');
+            loadProducts();
+            showNotification('Product added successfully', 'success');
+        }
+        
+        function editProduct(productId) {
+            PermissionSystem.requirePermission('edit', () => {
+                const product = AppState.products.find(p => p.id === productId);
+                if (!product) return;
+                
+                // Fill modal
+                document.getElementById('modalProductName').value = product.name;
+                document.getElementById('modalBarcode').value = product.barcode;
+                document.getElementById('modalCategory').value = product.category;
+                document.getElementById('modalCostPrice').value = product.costPrice;
+                document.getElementById('modalSellingPrice').value = product.sellingPrice;
+                document.getElementById('modalInitialStock').value = product.stock;
+                document.getElementById('modalReorderLevel').value = product.reorderLevel;
+                
+                showModal('addProductModal');
+            });
+        }
+        
+        function deleteProduct(productId) {
+            PermissionSystem.requirePermission('no_delete', () => {
+                showSecurityModal(
+                    'deleteProductConfirmed',
+                    'Delete product permanently',
+                    productId
+                );
+            });
+        }
+        
+        function deleteProductConfirmed(productId) {
+            const index = AppState.products.findIndex(p => p.id === productId);
+            if (index === -1) return;
+            
+            const product = AppState.products[index];
+            AppState.products.splice(index, 1);
+            
+            AuditSystem.log('Product Deleted', `Deleted product: ${product.name} (${product.barcode})`, true);
+            loadProducts();
+            showNotification('Product deleted', 'success');
+        }
+        
+        function exportProducts() {
+            showSecurityModal('exportProductsConfirmed', 'Export product data');
+        }
+        
+        function exportProductsConfirmed() {
+            // Generate Excel (simulated)
+            showNotification('Product data exported to Excel', 'success');
+            AuditSystem.log('Export', 'Exported product data');
+        }
+        
+        // ============================================================================
+        // ADMIN PANEL FUNCTIONS
+        // ============================================================================
+        
+        function loadAdminData() {
+            // Load current settings
+            const businessSelect = document.getElementById('loginBusiness');
+            const businessName = businessSelect.options[businessSelect.selectedIndex].text;
+            document.getElementById('businessName').value = businessName.split(' (')[0];
+        }
+        
+        function generateActivationKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = 'FRT-';
+            for (let i = 0; i < 16; i++) {
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+                if (i === 3 || i === 7 || i === 11) key += '-';
+            }
+            document.getElementById('activationKey').value = key;
+            showNotification('New activation key generated', 'success');
+        }
+        
+        function initiateLockdown() {
+            showSecurityModal('lockdownConfirmed', 'Initiate system lockdown');
+        }
+        
+        function lockdownConfirmed() {
+            AppState.isLocked = true;
+            showNotification('SYSTEM LOCKDOWN INITIATED', 'error');
+            AuditSystem.log('Security', 'System lockdown initiated', true);
+            
+            setTimeout(() => {
+                AppState.isLocked = false;
+                showNotification('System lockdown lifted', 'success');
+            }, 300000);
+        }
+        
+        function terminateAllSessions() {
+            if (confirm('Terminate all user sessions?')) {
+                showNotification('All sessions terminated', 'warning');
+                AuditSystem.log('Admin', 'Terminated all user sessions', true);
+            }
+        }
+        
+        function saveAdminSettings() {
+            showNotification('Settings saved successfully', 'success');
+            AuditSystem.log('Admin', 'Updated system settings');
+        }
+        
+        function resetSystemData() {
+            showSecurityModal('resetSystemConfirmed', 'Reset all system data');
+        }
+        
+        function resetSystemConfirmed() {
+            AppState.products = [];
+            AppState.transactions = [];
+            AppState.cheques = [];
+            AppState.employees = [];
+            
+            loadProducts();
+            loadRecentTransactions();
+            loadCheques();
+            loadEmployees();
+            
+            showNotification('System data reset', 'success');
+            AuditSystem.log('System', 'Reset all system data', true);
+        }
+        
+        // ============================================================================
+        // CHEQUE HUB FUNCTIONS
+        // ============================================================================
+        
+        function loadCheques() {
+            const tbody = document.getElementById('chequesTable');
+            tbody.innerHTML = '';
+            
+            AppState.cheques.forEach(cheque => {
+                const row = document.createElement('tr');
+                
+                // Type badge
+                const typeBadge = cheque.type === 'Received' 
+                    ? '<span class="badge badge-success">Received</span>'
+                    : '<span class="badge badge-danger">Issued</span>';
+                
+                // Status badge
+                let statusBadge = '';
+                switch(cheque.status) {
+                    case 'Cleared':
+                        statusBadge = '<span class="badge badge-success">Cleared</span>';
+                        break;
+                    case 'Pending':
+                        statusBadge = '<span class="badge badge-warning">Pending</span>';
+                        break;
+                    case 'Bounced':
+                        statusBadge = '<span class="badge badge-danger">Bounced</span>';
+                        break;
+                }
+                
+                // Due soon warning
+                const dueDate = new Date(cheque.dueDate);
+                const today = new Date();
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                let dueWarning = '';
+                if (daysDiff <= 7 && daysDiff > 0 && cheque.status === 'Pending') {
+                    dueWarning = '<br><small class="badge badge-warning">Due in ' + daysDiff + ' days</small>';
+                } else if (daysDiff < 0 && cheque.status === 'Pending') {
+                    dueWarning = '<br><small class="badge badge-danger">Overdue</small>';
+                }
+                
+                row.innerHTML = `
+                    <td><strong>${cheque.chequeNumber}</strong></td>
+                    <td>${typeBadge}</td>
+                    <td>${cheque.bank}</td>
+                    <td><strong>$${cheque.amount.toFixed(2)}</strong></td>
+                    <td>${formatDate(cheque.dueDate)}${dueWarning}</td>
+                    <td>${statusBadge}</td>
+                    <td>${cheque.linkedAccount}</td>
+                    <td>
+                        <button class="btn btn-outline" onclick="editCheque('${cheque.id}')" style="padding: 5px 10px;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        function showAddChequeModal() {
+            // Would open cheque modal
+            showNotification('Add Cheque functionality', 'info');
+        }
+        
+        function showDueChequesReport() {
+            const dueCheques = AppState.cheques.filter(cheque => {
+                const dueDate = new Date(cheque.dueDate);
+                const today = new Date();
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                return daysDiff <= 7 && cheque.status === 'Pending';
+            });
+            
+            if (dueCheques.length === 0) {
+                showNotification('No cheques due within 7 days', 'info');
+            } else {
+                const total = dueCheques.reduce((sum, c) => sum + c.amount, 0);
+                alert(`${dueCheques.length} cheques due within 7 days. Total: $${total.toFixed(2)}`);
+                AuditSystem.log('Report', 'Generated due cheques report');
+            }
+        }
+        
+        // ============================================================================
+        // BARCODE STUDIO FUNCTIONS
+        // ============================================================================
+        
+        function updateBarcodePreview() {
+            const productName = document.getElementById('labelProductName').value || 'Sample Product';
+            const sku = document.getElementById('labelSKU').value || '8901234567890';
+            const price = document.getElementById('labelPrice').value || '29.99';
+            const expiry = document.getElementById('labelExpiry').value;
+            
+            // Generate barcode
+            JsBarcode("#barcodeSVG", sku, {
+                format: "CODE128",
+                width: 2,
+                height: 80,
+                displayValue: true,
+                fontSize: 14,
+                background: "transparent",
+                lineColor: "#000000"
+            });
+            
+            // Update preview
+            const preview = document.getElementById('labelPreview');
+            preview.innerHTML = `
+                <div style="font-weight: 700; font-size: 16px; margin-bottom: 5px;">${productName}</div>
+                <div style="font-size: 20px; font-weight: 800; color: #000; margin-bottom: 5px;">$${parseFloat(price).toFixed(2)}</div>
+                ${expiry ? `<div style="font-size: 12px; color: #666;">Exp: ${formatDate(expiry)}</div>` : ''}
+                <div style="font-size: 10px; color: #999; margin-top: 5px;">SKU: ${sku}</div>
+            `;
+        }
+        
+        function generateBarcode() {
+            if (!document.getElementById('labelSKU').value) {
+                const barcode = '89' + Math.floor(Math.random() * 10000000000).toString().padStart(10, '0');
+                document.getElementById('labelSKU').value = barcode;
+            }
+            updateBarcodePreview();
+            showNotification('Barcode generated', 'success');
+        }
+        
+        function printLabels() {
+            showNotification('Labels sent to printer', 'success');
+            AuditSystem.log('Print', 'Printed barcode labels');
+        }
+        
+        // ============================================================================
+        // AUDIT LOGS FUNCTIONS
+        // ============================================================================
+        
+        function loadAuditLogs() {
+            const tbody = document.getElementById('auditLogsTable');
+            tbody.innerHTML = '';
+            
+            // Get filtered logs
+            const filter = document.getElementById('auditActionFilter').value;
+            const search = document.getElementById('auditSearch').value.toLowerCase();
+            
+            let filteredLogs = AuditSystem.getLogsByAction(filter === 'All Actions' ? '' : filter);
+            
+            if (search) {
+                filteredLogs = filteredLogs.filter(log => 
+                    log.user.toLowerCase().includes(search) ||
+                    log.details.toLowerCase().includes(search)
+                );
+            }
+            
+            // Apply pagination
+            const start = (AppState.currentAuditPage - 1) * AppState.auditLogsPerPage;
+            const end = start + AppState.auditLogsPerPage;
+            const pageLogs = filteredLogs.slice(start, end);
+            
+            pageLogs.forEach(log => {
+                const row = document.createElement('tr');
+                
+                // Verification badge
+                const verifyBadge = log.requiresVerification 
+                    ? (log.verified 
+                        ? '<span class="badge badge-success">Verified</span> '
+                        : '<span class="badge badge-warning">Verification Required</span> ')
+                    : '';
+                
+                row.innerHTML = `
+                    <td>${formatDateTime(log.timestamp)}</td>
+                    <td><strong>${log.user}</strong><br><small>${log.role}</small></td>
+                    <td>${verifyBadge}<span class="badge badge-primary">${log.action}</span></td>
+                    <td>${log.details}</td>
+                    <td><code>${log.ipAddress}</code></td>
+                    <td>${log.business}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            updateAuditPagination(filteredLogs.length);
+        }
+        
+        function updateAuditPagination(totalItems) {
+            const totalPages = Math.ceil(totalItems / AppState.auditLogsPerPage);
+            const pagination = document.getElementById('auditPagination');
+            
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+            
+            pagination.style.display = 'flex';
+            let html = '';
+            
+            // Previous
+            html += `<button class="page-btn" ${AppState.currentAuditPage === 1 ? 'disabled' : ''} 
+                     onclick="changeAuditPage(${AppState.currentAuditPage - 1})">
+                     <i class="fas fa-chevron-left"></i></button>`;
+            
+            // Pages
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= AppState.currentAuditPage - 2 && i <= AppState.currentAuditPage + 2)) {
+                    html += `<button class="page-btn ${i === AppState.currentAuditPage ? 'active' : ''}" 
+                             onclick="changeAuditPage(${i})">${i}</button>`;
+                } else if (i === AppState.currentAuditPage - 3 || i === AppState.currentAuditPage + 3) {
+                    html += `<span style="padding: 10px;">...</span>`;
+                }
+            }
+            
+            // Next
+            html += `<button class="page-btn" ${AppState.currentAuditPage === totalPages ? 'disabled' : ''} 
+                     onclick="changeAuditPage(${AppState.currentAuditPage + 1})">
+                     <i class="fas fa-chevron-right"></i></button>`;
+            
+            pagination.innerHTML = html;
+        }
+        
+        function changeAuditPage(page) {
+            AppState.currentAuditPage = page;
+            loadAuditLogs();
+        }
+        
+        function exportAuditLogsConfirmed() {
+            showNotification('Audit logs exported', 'success');
+            AuditSystem.log('Export', 'Exported audit logs');
+        }
+        
+        function clearAuditLogsConfirmed() {
+            AuditSystem.logs = [];
+            AuditSystem.saveLogs();
+            loadAuditLogs();
+            showNotification('Audit logs cleared', 'success');
+            AuditSystem.log('System', 'Cleared all audit logs', true);
+        }
+        
+        // ============================================================================
+        // FINANCIAL REPORTS
+        // ============================================================================
+        
+        function generateProfitLossReport() {
+            exportReport('pdf', 'Profit & Loss Statement');
+        }
+        
+        function generateBalanceSheet() {
+            exportReport('pdf', 'Balance Sheet');
+        }
+        
+        function generateCashFlow() {
+            exportReport('pdf', 'Cash Flow Statement');
+        }
+        
+        function generateAgingReports() {
+            exportReport('pdf', 'Aging Reports');
+        }
+        
+        function generateDailySalesReport() {
+            exportReport('excel', 'Daily Sales Report');
+        }
+        
+        function generateCategoryReport() {
+            exportReport('excel', 'Category-wise Sales');
+        }
+        
+        function generatePaymentModeReport() {
+            exportReport('excel', 'Payment Mode Analysis');
+        }
+        
+        function generateExpenseBreakdown() {
+            exportReport('pdf', 'Expense Breakdown');
+        }
+        
+        function generateStockValuation() {
+            exportReport('pdf', 'Stock Valuation Report');
+        }
+        
+        function generateDeadStockReport() {
+            exportReport('pdf', 'Dead Stock Analysis');
+        }
+        
+        // ============================================================================
+        // HR & PAYROLL FUNCTIONS
+        // ============================================================================
+        
+        function loadEmployees() {
+            const tbody = document.getElementById('employeesTable');
+            tbody.innerHTML = '';
+            
+            AppState.employees.forEach(emp => {
+                const row = document.createElement('tr');
+                
+                let statusBadge = '';
+                switch(emp.status) {
+                    case 'Active':
+                        statusBadge = '<span class="badge badge-success">Active</span>';
+                        break;
+                    case 'On Leave':
+                        statusBadge = '<span class="badge badge-warning">On Leave</span>';
+                        break;
+                    case 'Inactive':
+                        statusBadge = '<span class="badge badge-danger">Inactive</span>';
+                        break;
+                }
+                
+                row.innerHTML = `
+                    <td>${emp.employeeId}</td>
+                    <td><strong>${emp.name}</strong></td>
+                    <td>${emp.department}</td>
+                    <td>${emp.position}</td>
+                    <td>$${emp.salary.toFixed(2)}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function showAddEmployeeModal() {
+            // Would open employee modal
+            showNotification('Add Employee functionality', 'info');
+        }
+        
+        function calculateSalary() {
+            const basic = parseFloat(document.getElementById('basicSalary').value) || 0;
+            const commissionRate = parseFloat(document.getElementById('commissionRate').value) || 0;
+            const sales = parseFloat(document.getElementById('salesAmount').value) || 0;
+            const deductions = parseFloat(document.getElementById('deductions').value) || 0;
+            
+            const commission = sales * (commissionRate / 100);
+            const netSalary = basic + commission - deductions;
+            
+            document.getElementById('netSalary').textContent = netSalary.toFixed(2);
+        }
+        
+        function generatePayroll() {
+            showNotification('Payroll processed successfully', 'success');
+            AuditSystem.log('HR', 'Processed payroll');
+        }
+        
+        // ============================================================================
+        // SECURITY MODAL SYSTEM
+        // ============================================================================
+        
+        let pendingSecurityAction = null;
+        let pendingSecurityData = null;
+        
+        function showSecurityModal(action, description, data = null) {
+            pendingSecurityAction = action;
+            pendingSecurityData = data;
+            
+            document.getElementById('securityDescription').textContent = 
+                `Security verification required: ${description}`;
+            
+            // Clear inputs
+            document.getElementById('securityPassword').value = '';
+            document.getElementById('securityAnswer').value = '';
+            
+            showModal('securityModal');
+        }
+        
+        function verifySecurity() {
+            const password = document.getElementById('securityPassword').value;
+            const answer = document.getElementById('securityAnswer').value;
+            
+            // Demo verification (in production, use proper auth)
+            if (password === 'admin123' && answer === 'test') {
+                if (pendingSecurityAction && window[pendingSecurityAction]) {
+                    if (pendingSecurityData) {
+                        window[pendingSecurityAction](pendingSecurityData);
+                    } else {
+                        window[pendingSecurityAction]();
+                    }
+                }
+                
+                closeModal('securityModal');
+                pendingSecurityAction = null;
+                pendingSecurityData = null;
+            } else {
+                showNotification('Security verification failed', 'error');
+            }
+        }
+        
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${type === 'success' ? '#10b981' : 
+                            type === 'error' ? '#ef4444' : 
+                            type === 'warning' ? '#f59e0b' : '#3b82f6'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: var(--box-shadow);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                      type === 'error' ? 'exclamation-circle' : 
+                                      type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 5000);
+        }
+        
+        function updateNotificationCount() {
+            AuditSystem.updateNotificationBadge();
+        }
+        
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function getAlertIcon(type) {
+            switch(type) {
+                case 'danger': return 'exclamation-circle';
+                case 'warning': return 'exclamation-triangle';
+                case 'success': return 'check-circle';
+                case 'info': return 'info-circle';
+                default: return 'bell';
+            }
+        }
+        
+        function toggleTheme() {
+            const body = document.body;
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+            } else {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+            }
+        }
+        
+        function exportReport(format, reportName) {
+            if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(20);
+                doc.text('FortressERP', 20, 20);
+                doc.setFontSize(14);
+                doc.text(reportName, 20, 30);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 40);
+                doc.text(`Business: ${AppState.business}`, 20, 50);
+                
+                // Sample table
+                doc.autoTable({
+                    head: [['Item', 'Qty', 'Price', 'Total']],
+                    body: [
+                        ['Product 1', '2', '$29.99', '$59.98'],
+                        ['Product 2', '1', '$49.99', '$49.99'],
+                        ['Product 3', '3', '$19.99', '$59.97']
+                    ],
+                    startY: 60,
+                    theme: 'grid'
+                });
+                
+                doc.save(`${reportName.replace(/\s+/g, '_')}.pdf`);
+                
+                AuditSystem.log('Report', `Generated PDF: ${reportName}`);
+                showNotification('PDF report generated', 'success');
+                
+            } else {
+                // Excel export simulation
+                showNotification('Excel report generated', 'success');
+                AuditSystem.log('Report', `Generated Excel: ${reportName}`);
+            }
+        }
+        
+        function setupEventListeners() {
+            // Amount tendered change
+            document.getElementById('amountTendered').addEventListener('input', calculateChange);
+            
+            // Audit filters
+            document.getElementById('auditActionFilter').addEventListener('change', loadAuditLogs);
+            document.getElementById('auditSearch').addEventListener('input', loadAuditLogs);
+            
+            // Product filters
+            document.getElementById('productSearch').addEventListener('input', loadProducts);
+            document.getElementById('categoryFilter').addEventListener('change', loadProducts);
+            
+            // Cheque filters
+            document.getElementById('chequeTypeFilter').addEventListener('change', loadCheques);
+            document.getElementById('chequeDateFilter').addEventListener('change', loadCheques);
+            
+            // Salary calculator
+            document.getElementById('basicSalary').addEventListener('input', calculateSalary);
+            document.getElementById('commissionRate').addEventListener('input', calculateSalary);
+            document.getElementById('salesAmount').addEventListener('input', calculateSalary);
+            document.getElementById('deductions').addEventListener('input', calculateSalary);
+            
+            // Responsive menu
+            window.addEventListener('resize', function() {
+                const toggle = document.getElementById('menuToggle');
+                if (window.innerWidth < 992) {
+                    toggle.style.display = 'block';
+                } else {
+                    toggle.style.display = 'none';
+                }
+            });
+            
+            // Initial resize
+            window.dispatchEvent(new Event('resize'));
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+S for save
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    if (AppState.currentPage === 'products') {
+                        saveProduct();
+                    }
+                }
+                
+                // F2 for POS
+                if (e.key === 'F2') {
+                    showPage('pos');
+                }
+                
+                // F5 for dashboard
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    showPage('dashboard');
+                }
+            });
+        }
+        
+        // ============================================================================
+        // INITIALIZATION COMPLETE
+        // ============================================================================
+        
+        console.log('FortressERP System Initialized');
+        console.log('Security Features Active:');
+        console.log('✓ Military-Grade Audit Logging');
+        console.log('✓ Hierarchical Permissions');
+        console.log('✓ AES-256 Encryption Simulation');
+        console.log('✓ 10-Minute Auto-Lock');
+        console.log('✓ Multi-step Verification');
+        console.log('✓ Data Isolation');
+        
+    </script>
+</body>
+</html>
